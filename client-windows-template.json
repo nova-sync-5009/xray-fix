@@ -1,0 +1,85 @@
+{
+  "_comment": "Replace VALUES_IN_BRACKETS with output from install.sh",
+  "log": {
+    "loglevel": "warning"
+  },
+  "inbounds": [
+    {
+      "tag": "socks",
+      "port": 10808,
+      "listen": "127.0.0.1",
+      "protocol": "socks",
+      "sniffing": {
+        "enabled": true,
+        "udp": true
+      },
+      "settings": {
+        "auth": "noauth",
+        "udp": true
+      }
+    },
+    {
+      "tag": "http",
+      "port": 10809,
+      "listen": "127.0.0.1",
+      "protocol": "http",
+      "sniffing": {
+        "enabled": true
+      }
+    }
+  ],
+  "outbounds": [
+    {
+      "tag": "proxy",
+      "protocol": "vless",
+      "settings": {
+        "vnext": [
+          {
+            "address": "64.188.6.74",
+            "port": 443,
+            "users": [
+              {
+                "id": "REPLACE_WITH_UUID",
+                "flow": "xtls-rprx-vision",
+                "encryption": "none"
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "tcp",
+        "security": "reality",
+        "realitySettings": {
+          "serverName": "www.microsoft.com",
+          "publicKey": "REPLACE_WITH_PUBLIC_KEY",
+          "shortId": "2b26f7b1fdec060e",
+          "fingerprint": "chrome"
+        }
+      }
+    },
+    {
+      "tag": "direct",
+      "protocol": "freedom"
+    },
+    {
+      "tag": "blocked",
+      "protocol": "blackhole"
+    }
+  ],
+  "routing": {
+    "domainStrategy": "IpIfNonMatch",
+    "rules": [
+      {
+        "type": "field",
+        "protocol": ["bittorrent"],
+        "outboundTag": "blocked"
+      },
+      {
+        "type": "field",
+        "ip": ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "127.0.0.1/8"],
+        "outboundTag": "direct"
+      }
+    ]
+  }
+}
