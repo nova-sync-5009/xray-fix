@@ -1,0 +1,124 @@
+============================================
+  Xray 代理修复 - VNC 操作指南
+============================================
+日期：2026-07-15
+VPS：64.188.6.74 (UQIDC 洛杉矶 DC1)
+
+============================================
+一、问题诊断
+============================================
+
+1. SSH 端口 59178 被 GFW 阻断（KEX 超时），无法远程 SSH
+2. 端口 443 TCP 通，但 TLS 握手无响应（Xray 配置/密钥错误）
+3. Gitee 仓库 install.sh 和 client-windows.json 的公钥不匹配
+4. VPS 上实际配置的密钥未知（可能是第三组）
+
+结论：需要通过 VNC 重新生成密钥并重写配置。
+
+============================================
+二、修复方案（选一种）
+============================================
+
+方案 A（推荐）：从 GitHub 下载执行
+-------------------------------------
+VPS 在洛杉矶，可直连 GitHub。
+
+1. 登录 UQIDC 控制面板
+   网址：https://www.uqidc.com/login
+   邮箱：790270562@qq.com
+   密码：cnx165ut
+
+2. 进入产品详情 → 点击 [VNC] 按钮打开网页终端
+
+3. 在 VNC 终端中输入 root 登录
+   用户名：root
+   密码：eacgZCFW0819
+
+4. 执行以下命令（一行，可直接粘贴）：
+
+   bash <(curl -sL https://raw.githubusercontent.com/nova-sync-5009/xray-fix/main/install.sh)
+
+5. 等待脚本执行完成（约 30-60 秒）
+   脚本会自动：
+   - 下载/更新 Xray-core
+   - 生成全新的 X25519 密钥对和 UUID
+   - 写入正确的 Reality 配置
+   - 启动 Xray 服务
+   - 输出 VLESS 链接和客户端配置
+
+6. 记录输出中的关键信息：
+   - UUID
+   - Public Key（公钥）
+   - VLESS Link（vless://开头的那一行）
+
+   注意：VNC 粘贴中文会乱码，但脚本输出全英文，可以正常复制。
+   如果 VNC 不支持复制，用手机拍照记录关键信息。
+
+方案 B（备用）：base64 一键命令
+-------------------------------------
+如果 GitHub 不可达，使用 base64 编码的命令。
+文件 vnc-one-liner.sh 中有一行超长命令，
+直接复制粘贴到 VNC 终端执行即可。
+
+如果命令太长无法一次粘贴，使用 vnc-chunked.sh 中的分段命令，
+逐段粘贴执行。
+
+============================================
+三、验证修复结果
+============================================
+
+脚本执行后，在 VNC 终端运行：
+
+  systemctl status xray
+  → 应显示 "active (running)"
+
+  curl -s --connect-timeout 5 https://www.google.com -o /dev/null -w "%{http_code}"
+  → 应返回 200 或 301
+
+============================================
+四、配置客户端
+============================================
+
+拿到服务器输出的信息后，在本地配置客户端：
+
+【Windows - v2rayN】
+1. 复制 VLESS Link（vless://...）
+2. 打开 v2rayN → 服务器 → 从剪贴板导入
+3. 或手动将 client-windows.json 模板中的信息替换为服务器输出
+
+【Android - v2rayNG / Nekobox】
+1. 复制 VLESS Link
+2. 打开 App → 右上角 + → 从剪贴板导入
+
+【客户端配置参数】
+- 地址：64.188.6.74
+- 端口：443
+- 协议：VLESS
+- UUID：（脚本输出）
+- 流控：xtls-rprx-vision
+- 加密：none
+- 传输：tcp
+- 安全：reality
+- SNI/ServerName：www.microsoft.com
+- Public Key：（脚本输出）
+- Short ID：2b26f7b1fdec060e
+- Fingerprint：chrome
+
+============================================
+五、如果仍然不工作
+============================================
+
+1. 检查防火墙：
+   iptables -L -n | grep 443
+
+2. 查看 Xray 日志：
+   journalctl -u xray -e --no-pager -n 50
+
+3. 检查端口监听：
+   ss -tlnp | grep 443
+
+4. 如果 Xray 启动失败：
+   /usr/local/bin/xray run -config /usr/local/etc/xray/config.json -test
+
+5. 终极方案：在控制面板重装系统（Debian 12），
+   重装后 VNC 执行方案 A 的命令即可。
