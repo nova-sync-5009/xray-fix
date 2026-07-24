@@ -1,0 +1,27 @@
+{
+  "log": { "loglevel": "warning" },
+  "inbounds": [{
+    "port": 8443,
+    "listen": "127.0.0.1",
+    "protocol": "vless",
+    "settings": {
+      "clients": [{ "id": "a06ab5a9-1ad5-4a98-97d1-5ae19e85319a", "encryption": "none" }],
+      "decryption": "none"
+    },
+    "sniffing": { "enabled": true },
+    "streamSettings": {
+      "network": "ws",
+      "wsSettings": { "path": "/ray" }
+    }
+  }],
+  "outbounds": [
+    { "protocol": "freedom", "tag": "direct" },
+    { "protocol": "blackhole", "tag": "blocked" }
+  ],
+  "routing": {
+    "domainStrategy": "AsIs",
+    "rules": [
+      { "type": "field", "protocol": ["bittorrent"], "outboundTag": "blocked" }
+    ]
+  }
+}
