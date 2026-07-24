@@ -1,0 +1,51 @@
+{
+  "log": { "loglevel": "warning" },
+  "inbounds": [
+    {
+      "port": 8443,
+      "listen": "127.0.0.1",
+      "protocol": "vless",
+      "settings": {
+        "clients": [{ "id": "a06ab5a9-1ad5-4a98-97d1-5ae19e85319a", "encryption": "none" }],
+        "decryption": "none"
+      },
+      "sniffing": { "enabled": true },
+      "streamSettings": {
+        "network": "ws",
+        "wsSettings": { "path": "/ray" }
+      }
+    },
+    {
+      "port": 443,
+      "listen": "0.0.0.0",
+      "protocol": "vless",
+      "settings": {
+        "clients": [{ "id": "f5e118a2-d0aa-43d1-a63f-e339ce0bfc87", "flow": "xtls-rprx-vision" }],
+        "decryption": "none"
+      },
+      "sniffing": { "enabled": true },
+      "streamSettings": {
+        "network": "tcp",
+        "security": "reality",
+        "realitySettings": {
+          "show": false,
+          "dest": "www.microsoft.com:443",
+          "xver": 0,
+          "serverNames": ["www.microsoft.com"],
+          "privateKey": "cOfwMs9xeqiTMEQmdf10-y3wuG33f37vL97YlwhkckY",
+          "shortIds": ["2b26f7b1fdec060e"]
+        }
+      }
+    }
+  ],
+  "outbounds": [
+    { "protocol": "freedom", "tag": "direct" },
+    { "protocol": "blackhole", "tag": "blocked" }
+  ],
+  "routing": {
+    "domainStrategy": "AsIs",
+    "rules": [
+      { "type": "field", "protocol": ["bittorrent"], "outboundTag": "blocked" }
+    ]
+  }
+}
